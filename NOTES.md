@@ -36,3 +36,8 @@ Meaning confirmed from the TCGA enrollment form :
 -  former = codes 3, 4, 5
 - [Not Available] smoking status = excluded from analysis.
 - Pack-years comparison:  Includes only ever-smokers with available values (356 patients)
+## data_clinical_sample.txt
+-Sample file: 586 samples (584 primary tumor, 2 recurrence), 584 distinct patients. 582 patients have 1 sample and 2 patients have 2.
+-Columns kept: 1 PATIENT_ID, 2 SAMPLE_ID, 17 SAMPLE_TYPE, 18 SAMPLE_TYPE_ID.
+-62 patients in the sample file have no clinical data and are excluded (no smoking information).
+-Still to decide: what to do with the 2 patients with 2 samples (probably keep the primary tumor only). We’ll check this when we look at the mutations.
