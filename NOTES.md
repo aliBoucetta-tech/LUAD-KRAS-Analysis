@@ -68,3 +68,29 @@ Meaning confirmed from the TCGA enrollment form :
 - The study group is about 230 patients, not 522.
 - The final table does not have kras_variant and kras_codon any more.
 
+## Final table (patients_kras_smoking.tsv)
+- 230 rows (one per sequenced patient) plus a header.
+- Columns: patient_id, sex, smoking_category, pack_years, age, kras_status
+- smoking_category: never, current, former or NA. kras_status: MUT or WT.
+- Missing values are written NA. Sex is written Male or Female (one "MALE" was fixed).
+- Missing in the 230: 9 smoking category, 16 age, 72 pack-years
+  (32 of them are never-smokers, where it does not apply).
+
+## Counts among the 230 sequenced patients
+| | KRAS mutated | KRAS normal |
+|---|---|---|
+| current | 17 | 28 |
+| former | 50 | 94 |
+| never | 5 | 27 |
+| smoking unknown (NA) | 3 | 6 |
+- Total: 75 mutated, 155 normal.
+- Main test: 221 patients with a known smoking category
+  (189 ever-smokers: 67 mutated and 122 normal; 32 never-smokers: 5 mutated and 27 normal).
+- Never-smokers are few (32), which is a limit.
+- All 230 sequenced patients have a row in the clinical file.
+- Patient IDs in the clinical file: no duplicates, all in the format TCGA-XX-XXXX.
+
+## Why the KRAS status comes from the mutation file
+- The clinical file has KRAS columns (34 to 38), but KRAS_MUTATION is filled in for only
+  62 of 522 patients (23 YES, 39 NO). The mutation file covers 230 patients with one method.
+
