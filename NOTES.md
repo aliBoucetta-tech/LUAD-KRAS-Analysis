@@ -42,4 +42,29 @@ Meaning confirmed from the TCGA enrollment form :
  - 62 patients in the sample file have no clinical data and are excluded (no smoking information).
  - Still to decide: what to do with the 2 patients with 2 samples (probably keep the primary tumor only). We’ll check this when we look at the mutations.
 ## data_mutation.txt
-- A sample is classified as KRAS-mutated if at least one KRAS mutation is recorded for that sample. All KRAS mutations in this file are classified as either Missense_Mutation or Nonsense_Mutation.
+- One line = one mutation found in one tumor sample. 72,542 lines, for all genes.
+- It covers 230 samples. These are the same 230 as in case_lists/cases_sequenced.txt
+  (the samples whose DNA was read).
+- Columns used: 1 Hugo_Symbol (gene name), 10 Variant_Classification (type of mutation),
+  17 Tumor_Sample_Barcode (which sample).
+- There is no patient ID column. The link to the patient goes through the sample file.
+- KRAS: 76 lines, in 75 different samples (one sample has 2 KRAS mutations).
+  Types: 75 Missense_Mutation, 1 Nonsense_Mutation. Both change the protein.
+  No Silent mutation appears for KRAS.
+- All 75 mutated samples exist in the sample file.
+## Who we study
+- Only the 230 sequenced samples can be called "KRAS mutated" or "KRAS normal".
+  A patient who was not sequenced is unknown, not normal.
+- Among the 230: about 75 have a KRAS mutation (about 1 in 3), the others have normal KRAS.
+- Patients without a smoking category are removed. The final group will be a bit smaller than 230.
+
+## Decisions
+- A patient is KRAS mutated if at least one of their samples has at least one KRAS mutation line.
+- A patient with 2 samples or 2 KRAS mutations counts once.
+- We keep only two things from the mutation file: the sample and the type of mutation.
+  We do not study which exact KRAS change it is (we keep the question simple).
+
+## Changes for the team
+- The study group is about 230 patients, not 522.
+- The final table does not have kras_variant and kras_codon any more.
+
