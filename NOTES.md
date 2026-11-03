@@ -37,7 +37,9 @@ Meaning confirmed from the TCGA enrollment form :
 - [Not Available] smoking status = excluded from analysis.
 - Pack-years comparison:  Includes only ever-smokers with available values (356 patients)
 ## data_clinical_sample.txt
--Sample file: 586 samples (584 primary tumor, 2 recurrence), 584 distinct patients. 582 patients have 1 sample and 2 patients have 2.
--Columns kept: 1 PATIENT_ID, 2 SAMPLE_ID, 17 SAMPLE_TYPE, 18 SAMPLE_TYPE_ID.
--62 patients in the sample file have no clinical data and are excluded (no smoking information).
--Still to decide: what to do with the 2 patients with 2 samples (probably keep the primary tumor only). We’ll check this when we look at the mutations.
+ - Sample file: 586 samples (584 primary tumor, 2 recurrence), 584 distinct patients. 582 patients have 1 sample and 2 patients have 2.
+ - Columns kept: 1 PATIENT_ID, 2 SAMPLE_ID, 17 SAMPLE_TYPE, 18 SAMPLE_TYPE_ID.
+ - 62 patients in the sample file have no clinical data and are excluded (no smoking information).
+ - Still to decide: what to do with the 2 patients with 2 samples (probably keep the primary tumor only). We’ll check this when we look at the mutations.
+## data_mutation.txt
+- A sample is classified as KRAS-mutated if at least one KRAS mutation is recorded for that sample. All KRAS mutations in this file are classified as either Missense_Mutation or Nonsense_Mutation.
