@@ -1,0 +1,28 @@
+{
+    "n_patients_analyzed": 221,
+    "n_excluded_missing_smoking": 9,
+    "contingency_table": {
+        "MUT": {
+            "Smoker": 67,
+            "Never smoker": 5
+        },
+        "WT": {
+            "Smoker": 122,
+            "Never smoker": 27
+        }
+    },
+    "fisher": {
+        "odds_ratio": 2.9655737704918033,
+        "p_value": 0.0263361744728097,
+        "ci_low": 1.091286100577899,
+        "ci_high": 8.05895702655033
+    },
+    "mann_whitney": {
+        "u_statistic": 2964.0,
+        "p_value": 0.7579459817193346,
+        "n_mut": 57,
+        "n_wt": 101,
+        "median_mut": 38.0,
+        "median_wt": 40.0
+    }
+}
