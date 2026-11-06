@@ -1,0 +1,20 @@
+# Exemple de crontab pour LUAD x KRAS.
+# Remplacer /CHEMIN/ABSOLU/projet par le chemin absolu du projet.
+#
+# Installer sans écraser les tâches existantes :
+# (crontab -l 2>/dev/null; cat scripts/cron_example.txt) | crontab -
+#
+# Vérifier : crontab -l
+# Journal : logs/cron.log
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# Chaque lundi à 03h00 : relancer le pipeline
+0 3 * * 1 cd /CHEMIN/ABSOLU/projet && ./run.sh >> logs/cron.log 2>&1
+
+# Chaque jour à 02h00 : vérifier les données brutes
+0 2 * * * cd /CHEMIN/ABSOLU/projet && ./scripts/01_download.sh >> logs/cron.log 2>&1
+
+# Chaque dimanche à 04h00 : créer une archive datée
+0 4 * * 0 cd /CHEMIN/ABSOLU/projet && ./scripts/03_archive.sh >> logs/cron.log 2>&1
