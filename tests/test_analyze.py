@@ -9,7 +9,8 @@ import pytest
 # analyze.py est dans scripts/ (ce fichier est dans tests/)
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts"))
 
-from analyze import build_2x2, fisher_test, prepare_groups, run_analysis  # noqa: E402
+from analyze import (EXIT_BAD_INPUT, EXIT_MISSING_INPUT, build_2x2,  # noqa: E402
+                     fisher_test, load_data, prepare_groups, run_analysis)
 
 
 def make_df():
@@ -57,3 +58,21 @@ def test_output_files_written(tmp_path):
         assert (out / "figures" / name).exists()
     data = json.loads((out / "statistical_results.json").read_text())
     assert data["n_patients_analyzed"] == 221
+
+
+def test_missing_input_file_exit_code_3(tmp_path, capsys):
+    """Test 4 : fichier d'entrée absent -> code de retour 3 + message clair."""
+    with pytest.raises(SystemExit) as exc:
+        load_data(str(tmp_path / "n_existe_pas.tsv"))
+    assert exc.value.code == EXIT_MISSING_INPUT == 3
+    assert "introuvable" in capsys.readouterr().err
+
+
+def test_missing_column_exit_code_1(tmp_path, capsys):
+    """Test 5 : colonne obligatoire absente -> code de retour 1 + message clair."""
+    bad = tmp_path / "bad.tsv"
+    bad.write_text("patient_id\tkras_status\nP1\tMUT\n")  # manque 2 colonnes
+    with pytest.raises(SystemExit) as exc:
+        load_data(str(bad))
+    assert exc.value.code == EXIT_BAD_INPUT == 1
+    assert "colonnes manquantes" in capsys.readouterr().err

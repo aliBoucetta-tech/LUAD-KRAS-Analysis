@@ -20,17 +20,28 @@ from scipy.stats import fisher_exact, mannwhitneyu
 
 REQUIRED_COLUMNS = ["patient_id", "kras_status", "smoking_category", "pack_years"]
 
+# Codes de retour, cohérents avec scripts/lib.sh (EX_MISSING_INPUT = 3)
+EXIT_MISSING_INPUT = 3   # fichier d'entrée absent
+EXIT_BAD_INPUT = 1       # fichier présent mais inutilisable : erreur générale
+                         # (le code 4 de lib.sh = intégrité/checksum, autre sens)
+
+
+def fail(message, code):
+    """Écrit le message sur stderr (pas sur stdout) et quitte avec le code donné."""
+    print(message, file=sys.stderr)
+    sys.exit(code)
+
 
 # ---------------------------------------------------------------- chargement
 def load_data(input_file):
     """Lit le TSV nettoyé. Arrête le programme si le fichier est absent
     ou s'il manque une colonne (jamais de fausses données en secours)."""
     if not os.path.exists(input_file):
-        sys.exit(f"Erreur : fichier introuvable : {input_file}")
+        fail(f"Erreur : fichier introuvable : {input_file}", EXIT_MISSING_INPUT)
     df = pd.read_csv(input_file, sep="\t")
     missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
     if missing:
-        sys.exit(f"Erreur : colonnes manquantes dans {input_file} : {missing}")
+        fail(f"Erreur : colonnes manquantes dans {input_file} : {missing}", EXIT_BAD_INPUT)
     return df
 
 
@@ -43,6 +54,8 @@ def prepare_groups(df):
         {"current": "Smoker", "former": "Smoker", "never": "Never smoker"}
     )
     df = df.dropna(subset=["smoking_group"])
+    if df.empty:
+        fail("Erreur : aucun patient exploitable après filtrage.", EXIT_BAD_INPUT)
     return df, n_total - len(df)
 
 
