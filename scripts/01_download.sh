@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # scripts/01_download.sh : télécharge luad_tcga.tar.gz et vérifie son intégrité.
 #   Codes de retour : 0 ok | 2 usage | 4 intégrité (checksum/taille/archive) | 5 réseau | 6 outil manquant
 set -euo pipefail

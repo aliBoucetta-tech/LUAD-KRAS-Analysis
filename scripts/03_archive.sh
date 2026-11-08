@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 # scripts/03_archive.sh : archive tar.gz datée des résultats + somme de contrôle.
 # Usage : scripts/03_archive.sh [dossier ...] (défaut : results data/processed)
