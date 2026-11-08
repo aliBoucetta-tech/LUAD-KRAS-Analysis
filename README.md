@@ -362,7 +362,7 @@ la grille officielle distribuée en cours.
 | 15 | `01_download.sh` : checksum créée puis vérifiée, code 4, rejet des fichiers < 1 Mo (LFS) | `scripts/01_download.sh` | `bash scripts/01_download.sh -h` + test d'altération |
 | 16 | `environment.yml` épinglé + `requirements.txt` de secours | racine | `conda env create -f environment.yml` |
 | 17 | `lib.sh` : `log()` horodatée, données brutes en lecture seule, scripts exécutables | `scripts/lib.sh` | `stat -c %A data/raw/luad_tcga/*` |
-| 18 | Archive `tar.gz` datée + SHA-256, exemple de `cron` expliqué | `scripts/03_archive.sh`, `scripts/cron_example.txt` | `sha256sum -c archives/*.sha256` |
+| 18 | Archive `tar.gz` datée + SHA-256, exemple de `cron` expliqué | `scripts/03_archive.sh`, `scripts/cron_example.txt` | `(cd archives && sha256sum -c *.sha256)` |
 | 19 | `run.sh` : `-h`, au moins 2 options `getopts`, `set -euo pipefail`, `die()`, `trap` sur `mktemp -d`, 3 fonctions réutilisées, relance sans nettoyage | `run.sh` | `./run.sh -h`, `./run.sh -n` |
 | 20 | `run.sh` testé : fichier manquant, Ctrl-C, option inconnue, pas d'internet ; test sur clone neuf / VM propre | `tests/test_run.sh` | `bash tests/test_run.sh` |
 
