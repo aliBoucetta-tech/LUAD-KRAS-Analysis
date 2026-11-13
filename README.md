@@ -790,9 +790,6 @@ chmod +x run.sh scripts/*.sh scripts/analyze.py
 conda env create -f environment.yml
 conda activate luad-kras
 ./run.sh
-start results/figures/barplot_kras_smoking.png
-start results/figures/boxplot_pack_years.png
-start results/figures/hist_pack_years.png
 ```
 
 > Le dépôt est privé : demander l'accès avant le `git clone`, ou utiliser le ZIP.
