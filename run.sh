@@ -40,7 +40,11 @@ ARCHIVE_RAW="data/raw/luad_tcga.tar.gz"           # produced by 01_download.sh
 STUDY_DIR="data/raw/luad_tcga"                    # extracted raw files (read-only)
 CLEAN_TSV="data/processed/patients_kras_smoking.tsv"
 RESULTS_DIR="results"
-PYTHON="${PYTHON:-python3}"
+if [[ -z "${PYTHON:-}" && -x "$ROOT/.venv/bin/python" ]]; then
+  PYTHON="$ROOT/.venv/bin/python"        # venv local créé par python3 -m venv .venv
+else
+  PYTHON="${PYTHON:-python3}"
+fi
 PY_MODULES="${PY_MODULES:-numpy pandas scipy matplotlib seaborn}"
 NEEDED_RAW=(data_mutations.txt data_clinical_patient.txt data_clinical_sample.txt)
 EXPECTED_HEADER=$'patient_id\tsex\tsmoking_category\tpack_years\tage\tkras_status'
