@@ -1,4 +1,5 @@
 # LUAD × KRAS — mutations KRAS et tabagisme dans l'adénocarcinome pulmonaire
+> ⚡ **Exécution rapide** : voir la section **13. Exécution rapide (5 commandes)** à la fin du document.
 
 Pipeline reproductible pour répondre à une question simple sur le jeu de données
 public **TCGA-LUAD** (cBioPortal, étude `luad_tcga`) :
@@ -10,67 +11,312 @@ Le dépôt contient le téléchargement et la vérification des données, le net
 en shell, l'analyse statistique en Python, les figures, les tests et l'archivage
 daté des résultats. Tout se relance avec une seule commande : `./run.sh`.
 
-Version fonctionnelle — 9 novembre 2026.
+Version fonctionnelle — 13 novembre 2026.
 
 ---
 
-## 1. Installation
+## 1. Installation et première exécution
 
-### Prérequis
+Cette section est écrite pour une personne qui reçoit le projet et qui ne l'a
+jamais lancé. Suivre les étapes dans l'ordre, sans sauter la vérification
+finale. En cas de message d'erreur, voir la section **12. Dépannage**.
 
-| Outil | Version / remarque |
-|---|---|
-| Bash | 4 ou plus (Linux, macOS, WSL) |
-| `curl`, `tar`, `gzip` | fournis par le système |
-| Conda / Miniconda | recommandé, gère Python et les bibliothèques |
-| Python | **3.11** (les versions épinglées ne sont pas compatibles avec 3.13/3.14) |
-| Espace disque | environ 400 Mo (archive de 152 Mo + extraction + résultats) |
+### 1.0 Choisir son système
 
-### Méthode recommandée : conda
+| Système | Support | Section à suivre |
+|---|---|---|
+| Linux (Ubuntu, Debian, Fedora…) | ✅ testé | 1.2 |
+| Windows 10/11 | ✅ via **WSL2** | 1.1 puis 1.2 |
+| macOS | ⚠️ expérimental | 1.3 |
+| Windows sans WSL (`cmd`, PowerShell) | ❌ non supporté | installer WSL2 (1.1) |
+
+Le projet est un enchaînement de scripts **Bash** : il ne fonctionne pas dans
+l'invite de commandes Windows ni dans PowerShell. Sous Windows, il faut passer
+par WSL2 (un vrai Linux intégré à Windows).
+
+### 1.1 Windows 10/11 : installer WSL2 et Ubuntu
+
+Ouvrir **PowerShell en administrateur**, puis :
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Redémarrer l'ordinateur si demandé, lancer **Ubuntu** depuis le menu Démarrer,
+puis créer un nom d'utilisateur et un mot de passe Linux.
+
+> Toutes les commandes suivantes se font **dans le terminal Ubuntu**, pas dans
+> PowerShell. Pour éviter les problèmes de lenteur et de permissions, placer le
+> projet dans le dossier personnel Linux (`~/`) et non dans `/mnt/c/...`.
+
+Mettre à jour Ubuntu et installer les outils de base :
+
+```bash
+sudo apt update
+sudo apt install -y git curl tar gzip
+```
+
+Vérifier :
+
+```bash
+git --version
+curl --version
+bash --version
+```
+
+Puis passer à la section **1.4**.
+
+### 1.2 Linux
+
+Installer les outils de base selon la distribution.
+
+**Ubuntu / Debian :**
+
+```bash
+sudo apt update
+sudo apt install -y git curl tar gzip
+```
+
+**Fedora :**
+
+```bash
+sudo dnf install -y git curl tar gzip
+```
+
+Vérifier que Bash est en version 4 ou plus :
+
+```bash
+bash --version
+```
+
+### 1.3 macOS (support expérimental)
+
+macOS fournit Bash 3.2 et des outils BSD, alors que le pipeline utilise
+quelques commandes GNU. Le projet n'est pas testé automatiquement sur macOS :
+en cas de blocage, préférer Linux, WSL2 ou une machine virtuelle Linux.
+
+Pour essayer sur macOS, installer Homebrew (https://brew.sh) puis :
+
+```bash
+brew install bash gnu-tar coreutils findutils
+```
+
+Créer un dossier de liens vers les versions GNU et l'ajouter au `PATH` :
+
+```bash
+mkdir -p "$HOME/.luad-gnu"
+ln -sf "$(brew --prefix gnu-tar)/libexec/gnubin/tar"      "$HOME/.luad-gnu/tar"
+ln -sf "$(brew --prefix coreutils)/libexec/gnubin/sha256sum" "$HOME/.luad-gnu/sha256sum"
+ln -sf "$(brew --prefix coreutils)/libexec/gnubin/stat"      "$HOME/.luad-gnu/stat"
+ln -sf "$(brew --prefix coreutils)/libexec/gnubin/timeout"   "$HOME/.luad-gnu/timeout"
+ln -sf "$(brew --prefix findutils)/libexec/gnubin/find"      "$HOME/.luad-gnu/find"
+export PATH="$HOME/.luad-gnu:$(brew --prefix)/bin:$PATH"
+```
+
+Pour conserver ce `PATH`, ajouter la dernière ligne `export PATH=...` à la fin
+de `~/.zshrc`, puis rouvrir le terminal.
+
+### 1.4 Récupérer le projet
+
+Deux possibilités.
+
+**A. Depuis GitHub** (si le dépôt est privé, demander à être ajouté comme
+collaborateur, sinon le `git clone` échouera) :
 
 ```bash
 git clone https://github.com/aliBoucetta-tech/LUAD-KRAS-Analysis.git
 cd LUAD-KRAS-Analysis
-conda env create -f environment.yml
-conda activate luad-kras
-./run.sh
 ```
 
-### Méthode de secours : venv + pip
+**B. Depuis une archive ZIP ou un dossier copié :**
 
-À utiliser si conda n'est pas disponible. Il faut impérativement Python 3.11 :
+```bash
+unzip LUAD-KRAS-Analysis.zip
+cd LUAD-KRAS-Analysis
+```
+
+> Ne pas copier le dossier `.venv/` d'un autre ordinateur, ni `data/raw/` :
+> ils sont spécifiques à la machine. L'environnement Python sera recréé à
+> l'étape 1.5 et les données brutes seront téléchargées au premier lancement.
+
+### 1.5 Installer Python 3.11 et les bibliothèques
+
+Il faut **Python 3.11**. Les versions épinglées ne fonctionnent pas avec
+Python 3.13 ou 3.14.
+
+#### Méthode recommandée : conda / Miniconda
+
+Si `conda` est déjà installé :
+
+```bash
+conda env create -f environment.yml
+conda activate luad-kras
+```
+
+Si `conda` n'est pas installé (Linux ou WSL), installer Miniconda :
+
+```bash
+curl -fsSL -o /tmp/miniconda.sh \
+  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash /tmp/miniconda.sh -b -p "$HOME/miniconda3"
+eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)"
+conda init bash
+```
+
+Fermer puis rouvrir le terminal, et reprendre à `conda env create ...`.
+
+> Sur macOS, télécharger l'installateur Miniconda adapté (Intel ou Apple
+> Silicon) depuis https://docs.conda.io/en/latest/miniconda.html.
+
+#### Méthode de secours : venv + pip
+
+À utiliser si conda n'est pas disponible. Sous Ubuntu, si `python3.11` est
+disponible dans les dépôts :
+
+```bash
+sudo apt install -y python3.11 python3.11-venv
+```
+
+Si ce paquet n'existe pas pour ta version d'Ubuntu, utiliser conda (méthode
+recommandée) plutôt que d'installer Python 3.11 depuis une source externe.
+
+Puis :
 
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-./run.sh
 ```
 
 L'environnement conda (ou le venv) doit être activé **avant** `./run.sh` : le
 script vérifie la présence des modules Python et s'arrête avec le code 6 sinon.
 
+### 1.6 Vérifier l'installation avant de lancer le pipeline
+
+```bash
+python --version
+# doit afficher : Python 3.11.x
+
+python -c "import numpy, pandas, scipy, matplotlib, seaborn; print('modules OK')"
+# doit afficher : modules OK
+```
+
+Puis lancer les tests, qui utilisent de fausses données et **ne nécessitent
+pas internet** :
+
+```bash
+bash tests/test_run.sh
+python -m pytest -q tests/test_analyze.py
+```
+
+Résultat attendu :
+
+```text
+Result: 27 passed, 0 failed
+5 passed
+```
+
+Si ces deux commandes passent, l'installation est correcte et le pipeline
+complet peut être lancé (section 2).
+
 ---
 
 ## 2. Mode d'emploi
 
-### Démarrage rapide
+### 2.1 Premier lancement (pas à pas)
+
+1. Se placer dans le dossier du projet et activer l'environnement Python :
 
 ```bash
+cd LUAD-KRAS-Analysis
+conda activate luad-kras        # ou, avec la méthode venv : source .venv/bin/activate
+python --version                # doit afficher Python 3.11.x
+```
+
+2. Lancer le pipeline :
+
+```bash
+chmod +x run.sh scripts/*.sh scripts/analyze.py   # seulement si "Permission denied"
 ./run.sh
 ```
 
 Au premier lancement, le script télécharge l'archive `luad_tcga.tar.gz` (152 Mo)
 depuis cBioPortal, en crée la somme de contrôle, l'extrait, nettoie les données,
-lance l'analyse, produit les figures puis archive les résultats. Les lancements
-suivants réutilisent l'archive locale.
+lance l'analyse, produit les figures puis archive les résultats. Compter
+quelques minutes pour le téléchargement (selon la connexion), puis environ
+30 secondes pour le reste. Les lancements suivants réutilisent l'archive locale.
+
+Le script doit se terminer par :
+
+```text
+[INFO] [run.sh] Pipeline finished OK (log: logs/run_....log)
+```
+
+et le code de retour doit être **0**.
+
+3. Vérifier les fichiers produits :
+
+```bash
+ls results
+# contingency_table.csv  figures  statistical_results.json
+
+ls results/figures
+# barplot_kras_smoking.png  boxplot_pack_years.png  hist_pack_years.png
+
+wc -l data/processed/patients_kras_smoking.tsv
+# 231  (1 en-tête + 230 patients)
+
+ls archives
+# une archive luad_kras_AAAAMMJJ_HHMMSS.tar.gz et son .sha256
+```
+
+4. Consulter les résultats :
+
+- `results/statistical_results.json` : effectifs, tableau 2×2, Fisher, Mann-Whitney ;
+- `results/contingency_table.csv` : tableau de contingence ;
+- `results/figures/*.png` : les trois figures ;
+- `logs/run_AAAAMMJJ_HHMMSS.log` : journal complet de l'exécution.
+
+Sous WSL, pour ouvrir le dossier dans l'Explorateur Windows :
+
+```bash
+explorer.exe .
+```
+
+5. Relancer plus tard :
+
+```bash
+./run.sh -s        # réutilise l'archive déjà téléchargée (hors ligne possible)
+./run.sh -s -t     # relance + tests automatiques
+./run.sh -f        # force un nouveau téléchargement
+```
 
 > Les données brutes ne sont pas versionnées (voir `.gitignore`) : le premier
 > lancement nécessite une connexion internet. Utiliser `-s` pour travailler
 > hors ligne si `data/raw/luad_tcga.tar.gz` est déjà présent.
 
-### Options de `run.sh`
+### 2.2 Vérifier que le résultat est conforme
+
+Après un lancement réussi, l'analyse doit afficher :
+
+```text
+Tableau de contingence (Fumeur / Jamais fumeur x MUT / WT) :
+kras_status    MUT   WT
+smoking_group
+Smoker          67  122
+Never smoker     5   27
+Patients analysés : 221 (exclus, tabagisme manquant : 9)
+Fisher : OR = 2.97 [IC95 % 1.09 - 8.06], p = 0.0263
+Mann-Whitney (pack-years) : p = 0.7579
+```
+
+La table nettoyée doit contenir **231 lignes** (en-tête compris) et les
+résultats doivent correspondre à la section **5. Résultats attendus**. Un écart
+significatif indique soit une erreur d'environnement, soit une donnée source
+différente (voir section 12).
+
+### 2.3 Options de `run.sh`
 
 | Option | Effet |
 |---|---|
@@ -84,7 +330,7 @@ suivants réutilisent l'archive locale.
 `-s` et `-f` sont incompatibles. Une option inconnue ou un argument inattendu
 renvoie le code 2 et affiche l'aide.
 
-### Codes de retour
+### 2.4 Codes de retour
 
 | Code | Signification |
 |---|---|
@@ -97,7 +343,7 @@ renvoie le code 2 et affiche l'aide.
 | 6 | outil ou module Python manquant |
 | 130 | interruption (Ctrl-C / SIGTERM), fichiers temporaires nettoyés |
 
-### Ce que fait `run.sh`, étape par étape
+### 2.5 Ce que fait `run.sh`, étape par étape
 
 1. **Téléchargement et vérification** — `scripts/01_download.sh` : téléchargement
    atomique (`.part` puis renommage), rejet des fichiers anormalement petits
@@ -119,7 +365,7 @@ table nettoyée, elle, n'est publiée dans `data/processed/` qu'après vérifica
 de son en-tête et de son nombre de lignes. Le pipeline peut être relancé sans
 nettoyage manuel.
 
-### Exécution script par script
+### 2.6 Exécution script par script
 
 ```bash
 # 1. Téléchargement (option -f pour forcer, -h pour l'aide)
@@ -366,13 +612,14 @@ la grille officielle distribuée en cours.
 | 19 | `run.sh` : `-h`, au moins 2 options `getopts`, `set -euo pipefail`, `die()`, `trap` sur `mktemp -d`, 3 fonctions réutilisées, relance sans nettoyage | `run.sh` | `./run.sh -h`, `./run.sh -n` |
 | 20 | `run.sh` testé : fichier manquant, Ctrl-C, option inconnue, pas d'internet ; test sur clone neuf / VM propre | `tests/test_run.sh` | `bash tests/test_run.sh` |
 
-Dernière vérification : **8 novembre 2026**, depuis un clone neuf, avec
-l'environnement Python 3.11 épinglé (`environment.yml`) :
+Dernière vérification : **13 novembre 2026**, depuis un clone neuf sous Linux,
+avec Python 3.11.18 et l'archive de données réelle :
 
 - `pytest -q tests/test_analyze.py` : **5 tests réussis** ;
 - `bash tests/test_run.sh` : **27 vérifications réussies, 0 échec** ;
-- `./run.sh -t` sur les vraies données : **code 0 en 27 s**, archive et checksum
-  valides, table produite identique à `data/processed/patients_kras_smoking.tsv`.
+- `./run.sh -s -t` sur les vraies données : **code 0**, archive et checksum
+  valides, table produite identique à `data/processed/patients_kras_smoking.tsv`,
+  résultats identiques à la section 5.
 
 ---
 
@@ -404,3 +651,125 @@ Les données, leur provenance et les références sont détaillées dans
 
 Les données TCGA sont publiques ; le dépôt ne contient que des identifiants
 TCGA (code-barres), aucune donnée personnelle identifiante.
+
+---
+
+## 12. Dépannage
+
+### 12.1 Erreurs fréquentes
+
+| Message / symptôme | Cause probable | Solution |
+|---|---|---|
+| `Permission denied` en lançant `./run.sh` | script non exécutable | `chmod +x run.sh scripts/*.sh scripts/analyze.py` |
+| `python: command not found` | Python absent | installer Python 3.11 ou Miniconda (section 1.5) |
+| `python --version` affiche 3.13 ou 3.14 | mauvaise version de Python | créer l'environnement 3.11 et l'activer |
+| code **6** : `Missing Python module(s)` | environnement non activé ou mauvais interpréteur | `conda activate luad-kras` ou `source .venv/bin/activate`, puis vérifier `which python` |
+| code **5** : `Download failed` | pas d'internet, proxy ou URL indisponible | vérifier la connexion ; si `data/raw/luad_tcga.tar.gz` existe déjà, relancer avec `./run.sh -s` |
+| code **4** : checksum / intégrité | archive corrompue ou modifiée | `./run.sh -f` pour la retélécharger |
+| code **3** : `Missing file` | archive absente ou vide | `./run.sh` (télécharge) ou `./run.sh -f` |
+| `--wildcards` non reconnu / `sha256sum: command not found` | macOS avec outils BSD | section 1.3, ou utiliser WSL2 / Linux |
+| `bad interpreter: /usr/bin/env: bash` ou `\r` dans les messages | fins de ligne Windows (CRLF) | `sed -i 's/\r$//' run.sh scripts/*.sh scripts/*.py` puis relancer |
+| `conda: command not found` | Miniconda non initialisé | rouvrir le terminal, ou `eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)"` |
+| `No space left on device` | disque plein | libérer environ 400 Mo |
+| `fatal: could not read Username` ou 404 au `git clone` | dépôt privé / pas d'accès | demander à être ajouté comme collaborateur, ou utiliser l'archive ZIP |
+| `tests/test_run.sh` affiche des `FAIL` | environnement incomplet ou macOS | vérifier Python 3.11 et les modules ; sous macOS, préférer WSL2/Linux |
+
+### 12.2 Vérifications utiles
+
+```bash
+pwd                         # doit finir par LUAD-KRAS-Analysis
+which python                # doit pointer vers .../luad-kras/... ou .../.venv/...
+python --version            # doit afficher 3.11.x
+bash --version              # doit afficher 4.x ou plus
+ls data/raw/luad_tcga.tar.gz
+ls results/figures/*.png
+```
+
+### 12.3 Repartir de zéro
+
+Si l'environnement Python est cassé, supprimer **uniquement** le dossier
+`.venv/`, puis recréer l'environnement (section 1.5).
+
+Ne pas supprimer `data/processed/patients_kras_smoking.tsv` : c'est la table de
+référence versionnée. Pour forcer un nouveau téléchargement des données brutes :
+
+```bash
+./run.sh -f
+```
+
+Enfin, pour vérifier que le dépôt est bien à jour avant de le transmettre :
+
+```bash
+git status
+git log --oneline -3
+```
+
+---
+
+## 13. Exécution rapide (5 commandes)
+
+Pour quelqu'un qui a déjà **Linux**, **WSL2/Ubuntu** ou **macOS** avec conda
+installé, voici les 5 commandes à lancer directement :
+
+
+```unzip LUAD-KRAS-Analysis-main.zip
+cd LUAD-KRAS-Analysis-main
+chmod +x run.sh scripts/*.sh scripts/analyze.py
+conda env create -f environment.yml
+conda activate luad-kras
+./run.sh
+```
+
+
+```bash
+git clone https://github.com/aliBoucetta-tech/LUAD-KRAS-Analysis.git
+cd LUAD-KRAS-Analysis
+conda env create -f environment.yml
+conda activate luad-kras
+./run.sh
+```
+
+> Sous Windows, lancer ces commandes dans le terminal **Ubuntu (WSL2)**, pas
+> dans PowerShell. Si le dépôt est privé, demander l'accès avant le `git clone`
+> (ou utiliser l'archive ZIP à la place des deux premières commandes).
+
+### Afficher les 3 figures du résultat
+
+Une commande par figure (sous Linux) :
+
+```bash
+xdg-open results/figures/barplot_kras_smoking.png
+xdg-open results/figures/boxplot_pack_years.png
+xdg-open results/figures/hist_pack_years.png
+```
+
+Remarques :
+
+- **macOS** : remplacer `xdg-open` par `open` ;
+- **WSL** : si `xdg-open` n'est pas disponible, ouvrir le dossier dans Windows
+  avec `explorer.exe "$(wslpath -w results/figures)"` ;
+- si aucune fenêtre ne s'ouvre, vérifier que les fichiers existent avec :
+  `ls -lh results/figures`.
+
+### Supprimer les archives des exécutions
+
+Une archive `luad_kras_AAAAMMJJ_HHMMSS.tar.gz` et son `.sha256` sont créées
+dans `archives/` à chaque exécution réussie. Pour supprimer uniquement celles
+générées par tes exécutions, sans toucher à l'archive de démonstration
+versionnée :
+
+```bash
+ls -lh archives          # vérifier ce qui existe
+git clean -n archives/   # aperçu (ne supprime rien)
+git clean -f archives/   # suppression effective
+```
+
+Si le projet a été reçu en ZIP (sans dossier `.git`), ou pour supprimer
+**toutes** les archives, y compris celle versionnée :
+
+```bash
+rm -f archives/luad_kras_*.tar.gz archives/luad_kras_*.tar.gz.sha256
+```
+
+> `rm -f` est définitif. Les résultats (`results/`) et la table nettoyée
+> (`data/processed/`) ne sont pas touchés.
