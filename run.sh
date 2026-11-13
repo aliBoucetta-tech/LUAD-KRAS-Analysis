@@ -40,10 +40,16 @@ ARCHIVE_RAW="data/raw/luad_tcga.tar.gz"           # produced by 01_download.sh
 STUDY_DIR="data/raw/luad_tcga"                    # extracted raw files (read-only)
 CLEAN_TSV="data/processed/patients_kras_smoking.tsv"
 RESULTS_DIR="results"
-if [[ -z "${PYTHON:-}" && -x "$ROOT/.venv/bin/python" ]]; then
-  PYTHON="$ROOT/.venv/bin/python"        # venv local créé par python3 -m venv .venv
-else
-  PYTHON="${PYTHON:-python3}"
+if [[ -z "${PYTHON:-}" ]]; then
+    if [[ -x "$ROOT/.venv/bin/python" ]]; then
+        PYTHON="$ROOT/.venv/bin/python"
+    elif command -v python >/dev/null 2>&1; then
+        PYTHON="$(command -v python)"
+    elif command -v python3 >/dev/null 2>&1; then
+        PYTHON="$(command -v python3)"
+    else
+        die "$EX_MISSING_TOOL" "Python not found."
+    fi
 fi
 PY_MODULES="${PY_MODULES:-numpy pandas scipy matplotlib seaborn}"
 NEEDED_RAW=(data_mutations.txt data_clinical_patient.txt data_clinical_sample.txt)
