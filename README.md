@@ -1,5 +1,5 @@
 # LUAD × KRAS — mutations KRAS et tabagisme dans l'adénocarcinome pulmonaire
-> ⚡ **Exécution rapide** : voir la section **13. Exécution rapide (5 commandes)** à la fin du document.
+> ⚡ **Exécution rapide** : voir la section **13. Exécution rapide** (cas Windows et cas Linux Ubuntu) à la fin du document.
 
 Pipeline reproductible pour répondre à une question simple sur le jeu de données
 public **TCGA-LUAD** (cBioPortal, étude `luad_tcga`) :
@@ -706,32 +706,178 @@ git log --oneline -3
 
 ---
 
-## 13. Exécution rapide (5 commandes)
+## 13. Exécution rapide : deux cas
 
-Pour quelqu'un qui a déjà **Linux**, **WSL2/Ubuntu** ou **macOS** avec conda
-installé, voici les 5 commandes à lancer directement :
+Deux cas seulement sont détaillés ici : **Windows 10/11** et **Linux Ubuntu**.
+Dans les deux cas, la séquence va de l'installation au lancement du programme,
+puis se termine par `./run.sh`. Les commandes se tapent toujours dans un
+terminal **bash** (Ubuntu, ou terminal WSL2 sous Windows), jamais dans
+PowerShell ou `cmd`.
 
+---
 
-```unzip LUAD-KRAS-Analysis-main.zip
+### Cas 1 — Windows 10/11 (WSL2 + Ubuntu)
+
+#### Étape 1. Installer WSL2 et Ubuntu (une seule fois)
+
+Ouvrir **PowerShell en administrateur**, puis :
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Redémarrer l'ordinateur si demandé, lancer **Ubuntu** depuis le menu Démarrer,
+et créer un nom d'utilisateur et un mot de passe Linux.
+
+Ensuite, **dans le terminal Ubuntu** (pas PowerShell), installer les outils de
+base :
+
+```bash
+sudo apt update
+sudo apt install -y unzip curl tar gzip git
+```
+
+Installer Miniconda (si `conda` n'est pas déjà disponible) :
+
+```bash
+curl -fsSL -o /tmp/miniconda.sh \
+  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash /tmp/miniconda.sh -b -p "$HOME/miniconda3"
+eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)"
+conda init bash
+```
+
+Fermer puis rouvrir le terminal Ubuntu pour que `conda` soit reconnu.
+
+> Important : travailler dans le dossier personnel Linux (`~`) et **non** dans
+> `/mnt/c/...`. Le pipeline est beaucoup plus rapide et les permissions sont
+> correctes.
+
+#### Étape 2. Dézipper et lancer le programme
+
+Placer l'archive ZIP dans le dossier personnel Linux, puis :
+
+```bash
+cd ~
+unzip LUAD-KRAS-Analysis-main.zip
 cd LUAD-KRAS-Analysis-main
+chmod +x run.sh scripts/*.sh scripts/analyze.py
+conda env create -f environment.yml
+conda activate luad-kras
+python --version          # doit afficher Python 3.11.x
+./run.sh
+```
+
+Si le ZIP a été téléchargé dans Windows, le dézipper depuis Ubuntu avec le
+chemin Windows, par exemple :
+
+```bash
+cd ~
+unzip /mnt/c/Users/TON_NOM/Downloads/LUAD-KRAS-Analysis-main.zip
+```
+
+> Si `ls` montre un dossier portant le même nom à l'intérieur (archive ZIP
+> imbriquée), entrer une seconde fois dedans : `cd LUAD-KRAS-Analysis-main`.
+> Le bon dossier est celui qui contient `run.sh`.
+
+#### Alternative : cloner le dépôt Git
+
+```bash
+cd ~
+git clone https://github.com/aliBoucetta-tech/LUAD-KRAS-Analysis.git
+cd LUAD-KRAS-Analysis
 chmod +x run.sh scripts/*.sh scripts/analyze.py
 conda env create -f environment.yml
 conda activate luad-kras
 ./run.sh
 ```
 
+> Le dépôt est privé : demander l'accès avant le `git clone`, ou utiliser le ZIP.
+
+---
+
+### Cas 2 — Linux Ubuntu (natif)
+
+#### Étape 1. Installer les outils de base
 
 ```bash
+sudo apt update
+sudo apt install -y unzip curl tar gzip git
+bash --version            # doit afficher 4.x ou plus
+```
+
+Installer Python 3.11 avec Miniconda (méthode recommandée) :
+
+```bash
+curl -fsSL -o /tmp/miniconda.sh \
+  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash /tmp/miniconda.sh -b -p "$HOME/miniconda3"
+eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)"
+conda init bash
+```
+
+Fermer puis rouvrir le terminal, et vérifier :
+
+```bash
+conda --version
+```
+
+#### Étape 2. Dézipper et lancer le programme
+
+```bash
+cd ~
+unzip LUAD-KRAS-Analysis-main.zip
+cd LUAD-KRAS-Analysis-main
+chmod +x run.sh scripts/*.sh scripts/analyze.py
+conda env create -f environment.yml
+conda activate luad-kras
+python --version          # doit afficher Python 3.11.x
+./run.sh
+```
+
+> Si `ls` montre un dossier portant le même nom à l'intérieur (archive ZIP
+> imbriquée), entrer une seconde fois dedans : `cd LUAD-KRAS-Analysis-main`.
+> Le bon dossier est celui qui contient `run.sh`.
+
+#### Alternative : cloner le dépôt Git
+
+```bash
+cd ~
 git clone https://github.com/aliBoucetta-tech/LUAD-KRAS-Analysis.git
 cd LUAD-KRAS-Analysis
+chmod +x run.sh scripts/*.sh scripts/analyze.py
 conda env create -f environment.yml
 conda activate luad-kras
 ./run.sh
 ```
 
-> Sous Windows, lancer ces commandes dans le terminal **Ubuntu (WSL2)**, pas
-> dans PowerShell. Si le dépôt est privé, demander l'accès avant le `git clone`
-> (ou utiliser l'archive ZIP à la place des deux premières commandes).
+---
+
+### Résultat attendu (les deux cas)
+
+Le premier lancement télécharge l'archive de données (152 Mo, quelques
+minutes), puis le pipeline s'exécute en une trentaine de secondes. Il doit se
+terminer par :
+
+```text
+[INFO] [run.sh] Pipeline finished OK (log: logs/run_....log)
+```
+
+et le code de retour doit être **0**. Vérifier les fichiers produits :
+
+```bash
+ls results
+# contingency_table.csv  figures  statistical_results.json
+ls results/figures
+# barplot_kras_smoking.png  boxplot_pack_years.png  hist_pack_years.png
+wc -l data/processed/patients_kras_smoking.tsv
+# 231  (1 en-tête + 230 patients)
+```
+
+> Si `conda env create -f environment.yml` répond que l'environnement
+> `luad-kras` existe déjà, passer directement à
+> `conda activate luad-kras` (ou lancer
+> `conda env update -f environment.yml --prune`).
 
 ### Afficher les 3 figures du résultat
 
